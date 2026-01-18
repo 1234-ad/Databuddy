@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm/relations";
 import {
 	account,
 	apikey,
+	flagFolders,
 	flags,
 	flagsToTargetGroups,
 	funnelDefinitions,
@@ -38,6 +39,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
 		relationName: "websites_organizationId_organization_id",
 	}),
 	teams: many(team),
+	flagFolders: many(flagFolders),
 }));
 
 export const accountRelations = relations(account, ({ one }) => ({
@@ -104,6 +106,7 @@ export const websitesRelations = relations(websites, ({ one, many }) => ({
 		relationName: "websites_organizationId_organization_id",
 	}),
 	funnelDefinitions: many(funnelDefinitions),
+	flagFolders: many(flagFolders),
 }));
 
 export const funnelDefinitionsRelations = relations(
@@ -138,10 +141,30 @@ export const apikeyRelations = relations(apikey, ({ one }) => ({
 	}),
 }));
 
+export const flagFoldersRelations = relations(flagFolders, ({ one, many }) => ({
+	website: one(websites, {
+		fields: [flagFolders.websiteId],
+		references: [websites.id],
+	}),
+	organization: one(organization, {
+		fields: [flagFolders.organizationId],
+		references: [organization.id],
+	}),
+	creator: one(user, {
+		fields: [flagFolders.createdBy],
+		references: [user.id],
+	}),
+	flags: many(flags),
+}));
+
 export const flagsRelations = relations(flags, ({ one, many }) => ({
 	website: one(websites, {
 		fields: [flags.websiteId],
 		references: [websites.id],
+	}),
+	folder: one(flagFolders, {
+		fields: [flags.folderId],
+		references: [flagFolders.id],
 	}),
 	flagsToTargetGroups: many(flagsToTargetGroups),
 }));
