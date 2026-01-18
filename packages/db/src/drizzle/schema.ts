@@ -636,6 +636,58 @@ export const annotationType = pgEnum("annotation_type", [
 
 export const chartType = pgEnum("chart_type", ["metrics"]);
 
+// Flag folders table for organizing feature flags
+export const flagFolders = pgTable(
+	"flag_folders",
+	{
+		id: text().primaryKey().notNull(),
+		name: text().notNull(),
+		description: text(),
+		color: text().default("#6366f1").notNull(),
+		websiteId: text("website_id"),
+		organizationId: text("organization_id"),
+		createdBy: text("created_by").notNull(),
+		createdAt: timestamp("created_at", { precision: 3 }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3 }).defaultNow().notNull(),
+		deletedAt: timestamp("deleted_at", { precision: 3 }),
+	},
+	(table) => [
+		index("flag_folders_website_id_idx").using(
+			"btree",
+			table.websiteId.asc().nullsLast().op("text_ops")
+		),
+		index("flag_folders_organization_id_idx").using(
+			"btree",
+			table.organizationId.asc().nullsLast().op("text_ops")
+		),
+		index("idx_flag_folders_created_by").using(
+			"btree",
+			table.createdBy.asc().nullsLast().op("text_ops")
+		),
+		foreignKey({
+			columns: [table.websiteId],
+			foreignColumns: [websites.id],
+			name: "flag_folders_website_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+		foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "flag_folders_organization_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+		foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [user.id],
+			name: "flag_folders_created_by_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("restrict"),
+	]
+);
+
 export const flags = pgTable(
 	"flags",
 	{
@@ -659,6 +711,7 @@ export const flags = pgTable(
 		dependencies: text("dependencies").array(),
 		targetGroupIds: text("target_group_ids").array(),
 		environment: text("environment"),
+		folderId: text("folder_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 		deletedAt: timestamp("deleted_at"),
@@ -676,6 +729,10 @@ export const flags = pgTable(
 		index("idx_flags_created_by").using(
 			"btree",
 			table.createdBy.asc().nullsLast().op("text_ops")
+		),
+		index("idx_flags_folder_id").using(
+			"btree",
+			table.folderId.asc().nullsLast().op("text_ops")
 		),
 		foreignKey({
 			columns: [table.websiteId],
@@ -705,6 +762,13 @@ export const flags = pgTable(
 		})
 			.onUpdate("cascade")
 			.onDelete("restrict"),
+		foreignKey({
+			columns: [table.folderId],
+			foreignColumns: [flagFolders.id],
+			name: "flags_folder_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("set null"),
 	]
 );
 
