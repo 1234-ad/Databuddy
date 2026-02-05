@@ -21,6 +21,7 @@ import {
     startRequestSpan,
 } from "./lib/tracing";
 import { agent } from "./routes/agent";
+import { alarmsRoute } from "./routes/alarms";
 import { health } from "./routes/health";
 import { publicApi } from "./routes/public";
 import { query } from "./routes/query";
@@ -47,7 +48,7 @@ const app = new Elysia()
         cors({
             credentials: true,
             origin: [
-                /(?:^|\.)databuddy\.cc$/,
+                /(?:^|\\.)databuddy\\.cc$/,
                 ...(process.env.NODE_ENV === "development"
                     ? ["http://localhost:3000"]
                     : []),
@@ -107,6 +108,7 @@ const app = new Elysia()
     )
     .use(query)
     .use(agent)
+    .use(alarmsRoute)
     .all(
         "/rpc/*",
         async ({ request, store }) => {
